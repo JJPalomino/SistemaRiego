@@ -1,0 +1,36 @@
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Secretos y configuracion local
+.env
+.env.*
+!.env.example
+
+# Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pruebas y cobertura
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Modelos entrenados (se regeneran)
+app/modules/ml_models/trained_files/
+
+# Bases de datos locales
+*.db
+*.sqlite3
+
+# Editores
+.vscode/
+.idea/
+
+# Sistema
+.DS_Store
+Thumbs.db

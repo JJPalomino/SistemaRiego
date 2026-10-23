@@ -1,0 +1,47 @@
+# Dependencias directas del proyecto.
+#
+# Se listan solo los paquetes que el codigo importa de forma explicita; el
+# resto se resuelve como dependencia transitiva.
+#
+# Para fijar el arbol completo de dependencias:
+#   pip freeze > requirements.lock.txt
+
+# --- Framework y servidor ---
+fastapi==0.141.1
+uvicorn==0.52.4
+python-multipart==0.0.32
+
+# --- Validacion y configuracion ---
+pydantic==2.13.4
+pydantic-settings==2.15.0
+email-validator==2.3.0
+python-dotenv==1.2.3
+
+# --- Base de datos ---
+SQLAlchemy==2.0.52
+alembic==1.19.1
+# Driver PostgreSQL. La app es 100% sincrona, por eso NO se usa asyncpg.
+psycopg2-binary==2.9.12
+
+# --- Autenticacion ---
+# `python-jose` firma y verifica los JWT.
+python-jose==3.5.0
+# `passlib` no tiene mantenimiento desde 2020. Se mantiene porque ya esta
+# integrado; el pin de bcrypt en 4.0.1 es obligatorio: con bcrypt >= 4.1
+# passlib 1.7.4 lanza AttributeError al leer el modulo de bcrypt.
+passlib==1.7.4
+bcrypt==4.0.1
+cryptography==50.0.1
+rsa==4.9.1
+pyasn1==0.6.4
+
+# --- Clientes HTTP (Open-Meteo y Gemini) ---
+httpx==0.28.1
+
+# --- Reportes PDF ---
+# Genera el reporte al momento de la descarga; el PDF no se almacena.
+reportlab==5.1.0
+
+# --- Pruebas ---
+pytest==9.1.1
+pytest-cov==7.1.0
