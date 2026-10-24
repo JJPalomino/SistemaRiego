@@ -1,0 +1,73 @@
+RESUMEN DEL FUNCIONAMIENTO Y LIMITACIONES ACTUALES DEL PROYECTO
+Sistema de Recomendaciones de Riego - Microparcelas Tlatlauquitepec, Puebla
+Fecha: 2026-10-24
+Repositorio: https://github.com/JJPalomino/SistemaRiego.git
+
+1) FUNCIONAMIENTO ACTUAL
+
+1.1 Arquitectura
+- Backend: FastAPI (Python 3.13.1), modular por dominios (users, crops, parcels, telemetry, ai_advisor, reports, ml_models).
+- Base de datos: PostgreSQL con migraciones Alembic.
+- Autenticación: JWT (Bearer). Aislamiento por usuario_id (recurso ajeno -> 404).
+- Catálogo: 9 hortalizas (Ajo, Calabaza, Jitomate, Rábano, Zanahoria, Acelga, Lechuga, Cilantro, Chile) con etapas fenológicas.
+- Clima externo: Open-Meteo (pronóstico 7 días). Normalización de unidades (humedad fracción->%, radiación).
+- IA: Google Gemini para redacción de la recomendación. Soporta modo DEMO (sin consumir tokens).
+- Reportes: PDF generado bajo demanda con ReportLab (sin guardar binario, solo metadatos en reportes_generados).
+- Telemetría: Soporte para sensores (sensores, lecturas_sensor) con ingesta idempotente. No se usan en la fase actual de recomendación.
+
+1.2 Flujo principal de recomendación
+1. El usuario registra parcela (con altitud automática vía Open-Meteo si no se indica).
+2. Registra siembra en la parcela (vinculada a una de las 9 hortalizas). Se valida traslape de ciclos.
+3. Solicita recomendación con siembra_id (flujo recomendado) o con id_hortaliza + dias_siembra.
+4. El sistema: resuelve hortaliza, etapa fenológica y días desde siembra; consulta Open-Meteo; construye prompt con hortaliza + clima + etapa; envía a Gemini (o responde en DEMO_MODE); sanea alertas.
+5. Si hay parcela/siembra asociada: guarda lectura_climatica (con JSON completo de respaldo) y consulta_recomendacion (prompt exacto, respuesta saneada, cultivo, etapa, días).
+6. Se devuelve RecomendacionResponse con clima, recomendación de riego/general, alertas, nivel de urgencia e id_consulta.
+7. Historial reproducible: GET /api/v1/ai/historial y /ai/historial/{id}. PDF: GET /api/v1/reportes/siembras/{id}.pdf.
+
+1.3 Historial y trazabilidad
+- lecturas_climaticas: guarda consulta a Open-Meteo (campos normalizados + datos_json completo).
+- consultas_recomendaciones: guarda siembra/parcela/lectura, hortaliza, etapa, días, prompt, respuesta_json (ya saneada), texto resumido, nivel_urgencia_max, modelo_llm, demo_mode.
+- reportes_generados: metadatos (usuario, siembra, consulta, fecha).
+- Aislamiento por usuario. FK con ON DELETE SET NULL/RESTRICT según corresponda.
+
+1.4 Seguridad y robustez aplicadas
+- Sin fuga de GEMINI_API_KEY: errores hacia cliente son genéricos.
+- Saneo de alertas/niveles antes de validar con Pydantic.
+- Endpoints con trabajo bloqueante (reports, ai_advisor) usan def (threadpool) para no bloquear event loop.
+- Reintentos con backoff+jitter para Gemini (429/5xx).
+- Modo DEMO para pruebas/sin cuota.
+- Ingesta idempotente para lecturas de sensores.
+- Validación de rangos físicos para telemetría.
+
+2) LIMITACIONES ACTUALES
+
+2.1 Funcionales
+- Sin sensores en operación: no se emulan lecturas_sensor para el flujo de recomendación. La recomendación usa solo catálogo + pronóstico Open-Meteo + Gemini.
+- Sin modelo Keras entrenado: no hay predicción numérica propia. Gemini redacta la recomendación con el contexto. Fases 4-5 pendientes.
+- Solo 9 hortalizas: se ajustó al objetivo general de SISTEMA DE RIEGO.pdf (se retiraron Frijol, Maíz, Papa, Haba).
+- Historial solo con parcela/siembra: si la petición es solo con id_hortaliza + dias_siembra sin parcela_id/siembra_id, no se guarda en BD (id_consulta null). No se genera PDF para ese caso.
+- Sin autenticación por roles avanzada: solo usuario autenticado. No hay roles admin distintos al uso general.
+- Sin notificaciones: solo consulta bajo demanda.
+
+2.2 Técnicas
+- Doble commit en flujo de recomendación: _guardar_lectura_climatica y _guardar_consulta hacen commit separados. Si Gemini falla tras guardar la lectura climática, queda huérfana.
+- Sesión SQLAlchemy abierta durante llamadas HTTP externas: la sesión puede permanecer inactiva mientras se espera a Open-Meteo/Gemini (riesgo de agotamiento de pool con muchas peticiones concurrentes lentas).
+- Pool PostgreSQL por defecto (pool_size=5, max_overflow=10): sin tuning para alta concurrencia.
+- Sin transacción unificada (rollback parcial): no hay un único bloque transaccional que deshaga lectura climática si falla la consulta a LLM.
+- Dependencia a servicios externos: requiere internet para Open-Meteo/Gemini. Modo DEMO mitiga, pero limita funcionalidad.
+- PDF síncrono con ReportLab: delegado a threadpool (mitigado), pero sigue siendo CPU-bound.
+- Sin caché de pronóstico: cada recomendación consulta Open-Meteo (se guarda en lecturas_climaticas para trazabilidad).
+
+2.3 Configuración / Despliegue
+- GEMINI_MODEL: por defecto gemini-2.5-flash (verificar vigencia periódicamente).
+- CORS abierto (*) en desarrollo.
+- Variables sensibles en .env (rotar credenciales reales).
+- Sin contenedores/docker-compose documentado para despliegue.
+- Sin CI/CD.
+- Solo probado en entorno Windows/local (PostgreSQL local).
+
+3) ESTADO ACTUAL
+- Fase 1-2: Completadas (parcels/siembras/sensores/catálogo).
+- Fase 3: Consolidada (flujo hortaliza + clima + Gemini + historial + PDF). Datos sintéticos masivos para entrenamiento NO requeridos en esta fase.
+- Fases 4-5 (entrenamiento Keras + integración modelo): Pendientes.
+- Pruebas: 86 passed. Cambios recientes subidos a GitHub.

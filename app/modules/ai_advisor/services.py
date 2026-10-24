@@ -2,9 +2,10 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, List, Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import settings
+from app.database import SessionLocal
 from app.modules.ai_advisor import llm_client, weather_client
 from app.modules.ai_advisor.models import (
     ConsultaRecomendacion,
@@ -189,6 +190,81 @@ def _guardar_consulta(
     return consulta
 
 
+def _guardar_lectura_climatica_tx(
+    db: Session, parcela_id: int, clima_raw: dict
+) -> LecturaClimatica:
+    """Versión para transacción unificada (sin commit/refresh)."""
+    datos = {k: v for k, v in clima_raw.items() if k != "json_raw"}
+
+    lectura = LecturaClimatica(
+        parcela_id=parcela_id,
+        fecha_inicio_pronostico=datos.get("fecha_inicio_pronostico"),
+        fecha_fin_pronostico=datos.get("fecha_fin_pronostico"),
+        dias_pronostico=datos.get("dias_pronostico") or 0,
+        datos_json=clima_raw.get("json_raw") or {},
+        temp_max_c=datos.get("temp_max_c"),
+        temp_min_c=datos.get("temp_min_c"),
+        temperatura_bulbo_seco_c=datos.get("temperatura_bulbo_seco_c"),
+        punto_rocio_c=datos.get("punto_rocio_c"),
+        humedad_relativa_pct=datos.get("humedad_relativa_pct"),
+        velocidad_viento_kmh=datos.get("velocidad_viento_kmh"),
+        temperatura_suelo_c=datos.get("temperatura_suelo_c"),
+        humedad_suelo_pct=datos.get("humedad_suelo_pct"),
+        precipitacion_mm=datos.get("precipitacion_mm"),
+        evapotranspiracion_ref_mm=datos.get("evapotranspiracion_ref_mm"),
+        probabilidad_precipitacion_pct=datos.get(
+            "probabilidad_precipitacion_pct"
+        ),
+        radiacion_solar_wm2=datos.get("radiacion_solar_wm2"),
+        radiacion_solar_mj_m2_dia=datos.get("radiacion_solar_mj_m2_dia"),
+        cobertura_nubes_pct=datos.get("cobertura_nubes_pct"),
+        fuente=datos.get("fuente") or "open_meteo",
+    )
+    db.add(lectura)
+    db.flush()
+    return lectura
+
+
+def _guardar_consulta_tx(
+    db: Session,
+    *,
+    parcela_id: Optional[int],
+    siembra_id: Optional[int],
+    hortaliza_id: int,
+    nombre_hortaliza: str,
+    etapa: str,
+    dias: int,
+    lectura_id: Optional[int],
+    prompt: str,
+    recomendacion: dict,
+    nivel: str,
+) -> ConsultaRecomendacion:
+    """Versión para transacción unificada (sin commit/refresh)."""
+    consulta = ConsultaRecomendacion(
+        parcela_id=parcela_id,
+        siembra_id=siembra_id,
+        lectura_climatica_id=lectura_id,
+        hortaliza_id=hortaliza_id,
+        nombre_hortaliza=nombre_hortaliza,
+        etapa=etapa,
+        dias_siembra=dias,
+        prompt=prompt,
+        respuesta_json=recomendacion,
+        recomendacion_riego=str(
+            recomendacion.get("recomendacion_riego", "")
+        ).strip(),
+        recomendacion_general=str(
+            recomendacion.get("recomendacion_general", "")
+        ).strip(),
+        nivel_urgencia_max=nivel,
+        modelo_llm=None if settings.DEMO_MODE else settings.GEMINI_MODEL,
+        demo_mode=settings.DEMO_MODE,
+    )
+    db.add(consulta)
+    db.flush()
+    return consulta
+
+
 # ---------------------------------------------------------------------------
 # Flujo principal
 # ---------------------------------------------------------------------------
@@ -198,9 +274,8 @@ def generar_recomendacion(
 ) -> RecomendacionResponse:
     """Orquesta el flujo: cultivo -> etapa -> clima -> LLM -> historial.
 
-    Si la peticion trae `siembra_id`, el cultivo, la parcela, la etapa y los
-    dias se toman de la base; el cliente no puede inventarlos. Si trae solo
-    `parcela_id`, se usa para asociar la lectura climatica.
+    Unit of Work: se carga contexto con sesión activa, se liberan llamadas HTTP
+    externas sin sesión, y se persiste en UNA ÚNICA transacción con rollback total.
     """
     siembra: Optional[Siembra] = None
     parcela: Optional[Parcela] = None
@@ -236,21 +311,30 @@ def generar_recomendacion(
         etapa.nombre_etapa if etapa is not None else "Sin etapa definida"
     )
 
-    # El JSON crudo solo se pide cuando hay parcela donde guardarlo.
+    # Datos primitivos antes de liberar sesión
+    parcela_id_ctx = parcela.id if parcela is not None else None
+    siembra_id_ctx = siembra.id if siembra is not None else None
+    hortaliza_id_ctx = hortaliza.id
+    nombre_hortaliza_ctx = hortaliza.nombre
+    hortaliza_prompt = _hortaliza_para_prompt(hortaliza)
+    guardar_historial = parcela is not None or siembra is not None
+
+    # Liberar sesión antes de llamadas HTTP externas
+    try:
+        db.close()
+    except Exception:
+        pass
+
+    # Llamadas HTTP externas sin sesión activa
     clima_raw = weather_client.obtener_clima(
         latitud=latitud,
         longitud=longitud,
         dias_pronostico=solicitud.dias_pronostico,
-        incluir_json_raw=parcela is not None,
+        incluir_json_raw=parcela_id_ctx is not None,
     )
     clima_datos = {k: v for k, v in clima_raw.items() if k != "json_raw"}
     clima = ClimaPronostico(**clima_datos)
 
-    lectura = None
-    if parcela is not None:
-        lectura = _guardar_lectura_climatica(db, parcela.id, clima_raw)
-
-    hortaliza_prompt = _hortaliza_para_prompt(hortaliza)
     prompt = llm_client.construir_prompt(
         hortaliza_prompt, clima_datos, nombre_etapa, dias
     )
@@ -262,30 +346,50 @@ def generar_recomendacion(
     alertas = _sanear_alertas(recomendacion.get("alertas"))
     nivel = _normalizar_urgencia(recomendacion.get("nivel_urgencia_max"))
 
-    # Guardar la respuesta ya saneada para mantener coherencia entre respuesta,
-    # historial y PDF
     recomendacion_saneada = dict(recomendacion)
     recomendacion_saneada["alertas"] = alertas
     recomendacion_saneada["nivel_urgencia_max"] = nivel
 
-    consulta = None
-    if parcela is not None or siembra is not None:
-        consulta = _guardar_consulta(
-            db,
-            parcela=parcela,
-            siembra=siembra,
-            hortaliza=hortaliza,
-            etapa=nombre_etapa,
-            dias=dias,
-            lectura=lectura,
-            prompt=prompt,
-            recomendacion=recomendacion_saneada,
-            nivel=nivel,
-        )
+    # Persistir en ÚNICA transacción
+    bind = getattr(db, "bind", None)
+    if bind is not None:
+        SessionTx = sessionmaker(autocommit=False, autoflush=False, bind=bind)
+        db_tx = SessionTx()
+    else:
+        db_tx = SessionLocal()
+    try:
+        with db_tx.begin():
+            lectura = None
+            if parcela_id_ctx is not None:
+                lectura = _guardar_lectura_climatica_tx(db_tx, parcela_id_ctx, clima_raw)
+            consulta = None
+            if guardar_historial:
+                consulta = _guardar_consulta_tx(
+                    db_tx,
+                    parcela_id=parcela_id_ctx,
+                    siembra_id=siembra_id_ctx,
+                    hortaliza_id=hortaliza_id_ctx,
+                    nombre_hortaliza=nombre_hortaliza_ctx,
+                    etapa=nombre_etapa,
+                    dias=dias,
+                    lectura_id=lectura.id if lectura is not None else None,
+                    prompt=prompt,
+                    recomendacion=recomendacion_saneada,
+                    nivel=nivel,
+                )
+        if consulta is not None:
+            db_tx.refresh(consulta)
+        if lectura is not None:
+            db_tx.refresh(lectura)
+    finally:
+        try:
+            db_tx.close()
+        except Exception:
+            pass
 
     return RecomendacionResponse(
-        id_hortaliza=hortaliza.id,
-        nombre_hortaliza=hortaliza.nombre,
+        id_hortaliza=hortaliza_id_ctx,
+        nombre_hortaliza=nombre_hortaliza_ctx,
         etapa=nombre_etapa,
         dias_siembra=dias,
         clima=clima,
