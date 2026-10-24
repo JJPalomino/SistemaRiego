@@ -21,8 +21,6 @@ class Alerta(BaseModel):
     @field_validator("nivel", mode="before")
     @classmethod
     def normalizar_nivel(cls, valor):
-        """La salida del LLM no es confiable: un nivel desconocido se degrada
-        a 'informativa' en lugar de romper la respuesta con un 500."""
         if isinstance(valor, NivelUrgencia):
             return valor
         if isinstance(valor, str):
@@ -33,18 +31,6 @@ class Alerta(BaseModel):
 
 
 class SolicitudRecomendacion(BaseModel):
-    """Datos minimos para pedir una recomendacion de riego.
-
-    Dos formas de uso:
-
-    - Con `siembra_id`: se toman de la base el cultivo, la parcela, la etapa y
-      los dias transcurridos. Es la forma que ademas deja historial.
-    - Con `id_hortaliza` y `dias_siembra`: modo manual, util para pruebas o
-      para consultar sin una siembra registrada.
-
-    Si se envia `parcela_id` (o `siembra_id`), las coordenadas de la parcela
-    tienen prioridad sobre `latitud`/`longitud`.
-    """
 
     siembra_id: Optional[int] = Field(
         default=None,
@@ -69,13 +55,13 @@ class SolicitudRecomendacion(BaseModel):
         default=19.2236,
         ge=-90,
         le=90,
-        description="Latitud de la microparcela (Tlatlauquitepec, Puebla por defecto).",
+        description="Latitud de la microparcela.",
     )
     longitud: float = Field(
         default=-97.8528,
         ge=-180,
         le=180,
-        description="Longitud de la microparcela (Tlatlauquitepec, Puebla por defecto).",
+        description="Longitud de la microparcela.",
     )
     dias_pronostico: int = Field(default=7, ge=1, le=16)
 
@@ -91,8 +77,6 @@ class SolicitudRecomendacion(BaseModel):
 
 
 class ClimaPronostico(BaseModel):
-    """Pronostico normalizado a las unidades del modelo de cultivos."""
-
     latitud: float
     longitud: float
     fecha_inicio_pronostico: Optional[str] = None
@@ -145,8 +129,6 @@ class RecomendacionResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 class LecturaClimaticaResumen(BaseModel):
-    """Consulta climatica sin el JSON de respaldo (para listados)."""
-
     id: int
     parcela_id: int
     consultado_en: Optional[datetime] = None
@@ -168,7 +150,6 @@ class LecturaClimaticaResumen(BaseModel):
     radiacion_solar_mj_m2_dia: Optional[float] = None
     cobertura_nubes_pct: Optional[float] = None
     fuente: str
-
     model_config = {"from_attributes": True}
 
 
@@ -191,7 +172,6 @@ class ConsultaRecomendacionResumen(BaseModel):
     modelo_llm: Optional[str] = None
     demo_mode: bool = False
     consultado_en: Optional[datetime] = None
-
     model_config = {"from_attributes": True}
 
 

@@ -32,7 +32,7 @@ def obtener_recomendacion(
     """Recomendacion de riego y manejo para los proximos 7 dias.
 
     Combina el catalogo de cultivos, el pronostico de Open-Meteo y el modelo
-    de lenguaje (Gemini) como agronomo. Si se envia `siembra_id`, la consulta
+    de lenguaje (Gemini) como agronomo. Si se envia 'siembra_id', la consulta
     queda en el historial reproducible junto con el clima exacto usado.
     """
     try:
@@ -65,9 +65,8 @@ def listar_clima(
     usuario: Usuario = Depends(get_current_user),
 ):
     """Consultas a Open-Meteo guardadas para una parcela (mas recientes primero).
-
-    No incluye `datos_json` para no inflar la respuesta; el detalle esta en
-    `/clima/{id}`.
+    No incluye 'datos_json' para no inflar la respuesta; el detalle esta en
+    '/clima/{id}'.
     """
     try:
         return services.listar_lecturas_climaticas(
@@ -116,11 +115,6 @@ def obtener_historial(
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(get_current_user),
 ):
-    """Detalle de una recomendacion con el prompt y la respuesta integra.
-
-    Es lo que permite reproducir la consulta meses despues: mismo clima,
-    misma etapa del cultivo y misma salida del modelo.
-    """
     try:
         return services.obtener_consulta(db, usuario.id, consulta_id)
     except services.ConsultaNoEncontrada as e:

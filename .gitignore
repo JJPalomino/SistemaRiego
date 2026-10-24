@@ -31,6 +31,9 @@ app/modules/ml_models/trained_files/
 .vscode/
 .idea/
 
+# Documentos de tramite INDAUTOR (locales, no se versionan)
+docs/INDAUTOR/
+
 # Sistema
 .DS_Store
 Thumbs.db

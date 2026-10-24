@@ -59,7 +59,7 @@ Repositorio: https://github.com/JJPalomino/SistemaRiego.git
 - Sin caché de pronóstico: cada recomendación consulta Open-Meteo (se guarda en lecturas_climaticas para trazabilidad).
 
 2.3 Configuración / Despliegue
-- GEMINI_MODEL: por defecto gemini-2.5-flash (verificar vigencia periódicamente).
+- GEMINI_MODEL: por defecto gemini-3.8-flash (verificar vigencia periódicamente).
 - CORS abierto (*) en desarrollo.
 - Variables sensibles en .env (rotar credenciales reales).
 - Sin contenedores/docker-compose documentado para despliegue.

@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     # Modelo de Gemini a utilizar.
     # NOTA: Verifica siempre los modelos vigentes con:
     #   GET https://generativelanguage.googleapis.com/v1beta/models
-    GEMINI_MODEL: str = "gemini-2.5-flash"
+    GEMINI_MODEL: str = "gemini-3.8-flash"
     GEMINI_API_BASE: str = "https://generativelanguage.googleapis.com/v1beta/models"
 
     # Vigencia del token JWT (en horas).
@@ -34,6 +34,11 @@ class Settings(BaseSettings):
 
     # Numero de reintentos ante fallos transitorios de la API (429/503).
     GEMINI_MAX_RETRIES: int = 3
+
+    # Tiempo maximo de espera por respuesta de Gemini (segundos). Los modelos
+    # con razonamiento pueden tardar mas de un minuto incluso en respuestas
+    # cortas, por lo que 60 s provocaba 502 intermitentes.
+    GEMINI_TIMEOUT_S: float = 180.0
 
     # Orígenes permitidos por CORS. En produccion debe ser una lista explicita
     # de dominios; "*" se permite solo mientras se desarrolla.

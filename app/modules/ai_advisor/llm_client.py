@@ -144,7 +144,7 @@ def generar_recomendacion(
 
     for intento in range(1, settings.GEMINI_MAX_RETRIES + 1):
         try:
-            with httpx.Client(timeout=60.0) as client:
+            with httpx.Client(timeout=settings.GEMINI_TIMEOUT_S) as client:
                 respuesta = client.post(
                     url_base,
                     params={"key": clave},

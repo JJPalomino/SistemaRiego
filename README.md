@@ -115,7 +115,7 @@ con HS256 usando `SECRET_KEY`.
 | `DATABASE_URL` | — | Cadena de conexion PostgreSQL |
 | `SECRET_KEY` | — | Clave de firma de los JWT |
 | `GEMINI_API_KEY` | — | API key de Google AI Studio |
-| `GEMINI_MODEL` | `gemini-3.5-flash` | Modelo de Gemini a usar |
+| `GEMINI_MODEL` | `gemini-3.8-flash` | Modelo de Gemini a usar |
 | `DEMO_MODE` | `false` | `true` responde sin llamar a Gemini (ahorra cuota) |
 | `ACCESS_TOKEN_EXPIRE_HOURS` | `24` | Vigencia del token |
 | `GEMINI_MAX_OUTPUT_TOKENS` | `4096` | Tope de tokens de salida |

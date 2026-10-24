@@ -1,9 +1,7 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, List, Optional
-
 from sqlalchemy.orm import Session, sessionmaker
-
 from app.core.config import settings
 from app.database import SessionLocal
 from app.modules.ai_advisor import llm_client, weather_client
@@ -23,21 +21,16 @@ from app.modules.parcels.models import Parcela, Siembra
 
 NIVELES_VALIDOS = {"informativa", "precaucion", "critica"}
 
-
 class HortalizaNoEncontrada(Exception):
     """La culture solicitada no existe."""
 
-
 class ConsultaNoEncontrada(Exception):
-    """La consulta no existe o pertenece a otro usuario."""
-
+    """La consulta no existe."""
 
 class LecturaClimaticaNoEncontrada(Exception):
-    """La lectura climatica no existe o pertenece a otro usuario."""
-
+    """La lectura climatica no existe."""
 
 def _a_float(valor: Any) -> Optional[float]:
-    """Convierte Decimal (columnas Numeric) a float para el prompt y el JSON."""
     if valor is None:
         return None
     if isinstance(valor, Decimal):
@@ -46,10 +39,7 @@ def _a_float(valor: Any) -> Optional[float]:
 
 
 def _a_texto(valor: Any) -> Any:
-    """Los enums mixtos (`str, Enum`) se pasan como `.value` para no imprimir
-    'SensibilidadNivel.media' dentro del prompt."""
     return getattr(valor, "value", valor)
-
 
 def _hortaliza_para_prompt(hortaliza: Hortaliza) -> dict:
     return {
@@ -71,15 +61,8 @@ def _hortaliza_para_prompt(hortaliza: Hortaliza) -> dict:
 
 
 def _sanear_alertas(alertas: Any) -> list:
-    """Filtra la lista de alertas devuelta por el LLM.
-
-    El modelo puede devolver elementos que no son objetos o con claves
-    faltantes; se descartan en lugar de propagar un error de validacion al
-    cliente.
-    """
     if not isinstance(alertas, list):
         return []
-
     limpias = []
     for alerta in alertas:
         if not isinstance(alerta, dict):
@@ -96,7 +79,6 @@ def _sanear_alertas(alertas: Any) -> list:
 
 
 def _normalizar_urgencia(valor: Any) -> str:
-    """El LLM puede inventar niveles; se degradan a 'informativa'."""
     if isinstance(valor, str):
         normalizado = valor.strip().lower()
         if normalizado in NIVELES_VALIDOS:
@@ -161,7 +143,7 @@ def _guardar_consulta(
 ) -> ConsultaRecomendacion:
     """Guarda la fotografia exacta de la recomendacion.
 
-    `respuesta_json` conserva la salida integra del modelo; las columnas de
+    'respuesta_json' conserva la salida integra del modelo; las columnas de
     texto son solo una copia comoda para listar el historial.
     """
     consulta = ConsultaRecomendacion(
