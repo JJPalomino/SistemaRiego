@@ -83,11 +83,12 @@ def _sanear_alertas(alertas: Any) -> list:
     for alerta in alertas:
         if not isinstance(alerta, dict):
             continue
+        nivel = _normalizar_urgencia(alerta.get("nivel"))
         limpias.append(
             {
                 "tipo": str(alerta.get("tipo", "alerta")),
                 "descripcion": str(alerta.get("descripcion", "")),
-                "nivel": alerta.get("nivel", "informativa"),
+                "nivel": nivel,
             }
         )
     return limpias
@@ -261,6 +262,12 @@ def generar_recomendacion(
     alertas = _sanear_alertas(recomendacion.get("alertas"))
     nivel = _normalizar_urgencia(recomendacion.get("nivel_urgencia_max"))
 
+    # Guardar la respuesta ya saneada para mantener coherencia entre respuesta,
+    # historial y PDF
+    recomendacion_saneada = dict(recomendacion)
+    recomendacion_saneada["alertas"] = alertas
+    recomendacion_saneada["nivel_urgencia_max"] = nivel
+
     consulta = None
     if parcela is not None or siembra is not None:
         consulta = _guardar_consulta(
@@ -272,7 +279,7 @@ def generar_recomendacion(
             dias=dias,
             lectura=lectura,
             prompt=prompt,
-            recomendacion=recomendacion,
+            recomendacion=recomendacion_saneada,
             nivel=nivel,
         )
 
@@ -283,10 +290,10 @@ def generar_recomendacion(
         dias_siembra=dias,
         clima=clima,
         recomendacion_riego=str(
-            recomendacion.get("recomendacion_riego", "")
+            recomendacion_saneada.get("recomendacion_riego", "")
         ).strip(),
         recomendacion_general=str(
-            recomendacion.get("recomendacion_general", "")
+            recomendacion_saneada.get("recomendacion_general", "")
         ).strip(),
         alertas=alertas,
         nivel_urgencia_max=nivel,

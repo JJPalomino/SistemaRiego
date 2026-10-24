@@ -230,7 +230,7 @@ def test_prompt_incluye_unidades_corregidas(monkeypatch):
     # Correccion 4: presupuesto de tokens suficiente y salida JSON forzada.
     config = capturado["payload"]["generationConfig"]
     assert config["maxOutputTokens"] >= 4096
-    assert config["response_mime_type"] == "application/json"
+    assert config.get("response_mime_type") == "application/json" or config.get("responseMimeType") == "application/json"
 
 
 def test_respuesta_truncada_lanza_error(monkeypatch):

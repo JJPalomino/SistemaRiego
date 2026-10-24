@@ -1,14 +1,16 @@
+import copy
 import json
+import random
 import re
+import time
 from typing import Optional
 
 import httpx
 
 from app.core.config import settings
 
-# El modelo se define en `settings.GEMINI_MODEL` (por defecto `gemini-3.5-flash`).
-# `gemini-1.5-flash`, que estaba antes hardcodeado, fue retirado de la API y
-# devuelve 404. Para ver los modelos vigentes:
+# El modelo se define en `settings.GEMINI_MODEL`.
+# La familia gemini-1.5-flash fue retirada. Verifica los modelos vigentes en:
 #   GET https://generativelanguage.googleapis.com/v1beta/models
 GEMINI_URL = settings.gemini_generate_url
 
@@ -21,7 +23,7 @@ RESPUESTA_DEMO = {
         "preferentemente por la manana."
     ),
     "recomendacion_general": (
-        "Modo demostracion: revisa el estado fenologico de la culture y vigila "
+        "Modo demostracion: revisa el estado fenologico del cultivo y vigila "
         "la aparicion de enfermedades foliares asociadas a la humedad alta."
     ),
     "alertas": [
@@ -100,7 +102,12 @@ def _extraer_json(texto: str) -> dict:
     inicio = limpio.find("{")
     fin = limpio.rfind("}")
     if inicio != -1 and fin > inicio:
-        return json.loads(limpio[inicio : fin + 1])
+        try:
+            return json.loads(limpio[inicio : fin + 1])
+        except json.JSONDecodeError as e:
+            raise ErrorLLM(
+                f"El modelo no devolvio un JSON interpretable. Respuesta: {texto[:300]}"
+            ) from e
 
     raise ErrorLLM(
         f"El modelo no devolvio un JSON interpretable. Respuesta: {texto[:300]}"
@@ -115,7 +122,7 @@ def generar_recomendacion(
 ) -> dict:
     """Genera la recomendacion de riego y manejo para los proximos 7 dias."""
     if settings.DEMO_MODE:
-        return dict(RESPUESTA_DEMO)
+        return copy.deepcopy(RESPUESTA_DEMO)
 
     prompt = construir_prompt(hortaliza, clima, etapa, dias_siembra)
 
@@ -127,18 +134,20 @@ def generar_recomendacion(
             # fallaba con "Unterminated string". Con 4096 cabe completa.
             "maxOutputTokens": settings.GEMINI_MAX_OUTPUT_TOKENS,
             # Obliga al modelo a responder JSON valido.
-            "response_mime_type": "application/json",
+            "responseMimeType": "application/json",
         },
     }
 
     ultimo_error: Optional[Exception] = None
+    clave = (settings.GEMINI_API_KEY or "").strip()
+    url_base = GEMINI_URL
 
     for intento in range(1, settings.GEMINI_MAX_RETRIES + 1):
         try:
             with httpx.Client(timeout=60.0) as client:
                 respuesta = client.post(
-                    GEMINI_URL,
-                    params={"key": settings.GEMINI_API_KEY},
+                    url_base,
+                    params={"key": clave},
                     json=payload,
                 )
                 if respuesta.status_code in (429, 500, 502, 503, 504):
@@ -150,23 +159,36 @@ def generar_recomendacion(
                 respuesta.raise_for_status()
                 datos = respuesta.json()
                 break
+        except httpx.HTTPStatusError as e:
+            ultimo_error = e
+            if e.response is not None and e.response.status_code == 429 and intento < settings.GEMINI_MAX_RETRIES:
+                tiempo_espera = min(2.0 ** intento + random.uniform(0.0, 0.5), 10.0)
+                time.sleep(tiempo_espera)
+                continue
+            if intento < settings.GEMINI_MAX_RETRIES and e.response is not None and e.response.status_code in (500, 502, 503, 504):
+                tiempo_espera = min(0.5 * intento + random.uniform(0.0, 0.2), 3.0)
+                time.sleep(tiempo_espera)
+                continue
+            # No exponemos la URL con la API key
+            raise ErrorLLM(f"No se pudo consultar Gemini tras {settings.GEMINI_MAX_RETRIES} intentos (HTTP {e.response.status_code if e.response is not None else 'desconocido'})") from None
         except httpx.HTTPError as e:
             ultimo_error = e
             if intento < settings.GEMINI_MAX_RETRIES:
+                tiempo_espera = min(0.5 * intento + random.uniform(0.0, 0.2), 3.0)
+                time.sleep(tiempo_espera)
                 continue
             raise ErrorLLM(
-                f"No se pudo consultar Gemini tras "
-                f"{settings.GEMINI_MAX_RETRIES} intentos: {e}"
-            ) from e
+                f"No se pudo consultar Gemini tras {settings.GEMINI_MAX_RETRIES} intentos"
+            ) from None
     else:
-        raise ErrorLLM(f"Fallo la consulta a Gemini: {ultimo_error}")
+        raise ErrorLLM("Fallo la consulta a Gemini")
 
     try:
         candidatos = datos["candidates"]
         partes = candidatos[0]["content"]["parts"]
         texto = partes[0]["text"]
     except (KeyError, IndexError, TypeError) as e:
-        raise ErrorLLM(f"Respuesta inesperada de Gemini: {datos}") from e
+        raise ErrorLLM("Respuesta inesperada de Gemini") from None
 
     motivo_fin = (candidatos[0].get("finishReason") or "").upper()
     if motivo_fin == "MAX_TOKENS":

@@ -19,9 +19,9 @@ class Settings(BaseSettings):
     DEMO_MODE: bool = False
 
     # Modelo de Gemini a utilizar.
-    # NOTA: `gemini-1.5-flash` (usado antes) fue retirado de la API y devuelve 404.
-    # Verificar siempre con: GET /v1beta/models
-    GEMINI_MODEL: str = "gemini-3.5-flash"
+    # NOTA: Verifica siempre los modelos vigentes con:
+    #   GET https://generativelanguage.googleapis.com/v1beta/models
+    GEMINI_MODEL: str = "gemini-2.5-flash"
     GEMINI_API_BASE: str = "https://generativelanguage.googleapis.com/v1beta/models"
 
     # Vigencia del token JWT (en horas).
