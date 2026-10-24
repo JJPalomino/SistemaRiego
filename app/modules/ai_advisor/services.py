@@ -272,11 +272,7 @@ def _guardar_consulta_tx(
 def generar_recomendacion(
     db: Session, usuario_id: int, solicitud: SolicitudRecomendacion
 ) -> RecomendacionResponse:
-    """Orquesta el flujo: cultivo -> etapa -> clima -> LLM -> historial.
-
-    Unit of Work: se carga contexto con sesión activa, se liberan llamadas HTTP
-    externas sin sesión, y se persiste en UNA ÚNICA transacción con rollback total.
-    """
+    """Orquesta el flujo: cultivo -> etapa -> clima -> LLM -> historial."""
     siembra: Optional[Siembra] = None
     parcela: Optional[Parcela] = None
 
@@ -311,7 +307,6 @@ def generar_recomendacion(
         etapa.nombre_etapa if etapa is not None else "Sin etapa definida"
     )
 
-    # Datos primitivos antes de liberar sesión
     parcela_id_ctx = parcela.id if parcela is not None else None
     siembra_id_ctx = siembra.id if siembra is not None else None
     hortaliza_id_ctx = hortaliza.id
@@ -319,13 +314,11 @@ def generar_recomendacion(
     hortaliza_prompt = _hortaliza_para_prompt(hortaliza)
     guardar_historial = parcela is not None or siembra is not None
 
-    # Liberar sesión antes de llamadas HTTP externas
     try:
         db.close()
     except Exception:
         pass
 
-    # Llamadas HTTP externas sin sesión activa
     clima_raw = weather_client.obtener_clima(
         latitud=latitud,
         longitud=longitud,
@@ -350,7 +343,6 @@ def generar_recomendacion(
     recomendacion_saneada["alertas"] = alertas
     recomendacion_saneada["nivel_urgencia_max"] = nivel
 
-    # Persistir en ÚNICA transacción
     bind = getattr(db, "bind", None)
     if bind is not None:
         SessionTx = sessionmaker(autocommit=False, autoflush=False, bind=bind)

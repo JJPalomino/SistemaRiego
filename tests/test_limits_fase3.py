@@ -64,9 +64,8 @@ def _recomendacion_valida():
 # ---------------------------------------------------------------------------
 
 def test_doble_commit_huerfano_tras_fallo_gemini(client, db, headers, parcela, hortaliza, monkeypatch):
-    """Con transacción unificada (Unit of Work) y rollback total, si Gemini
-    falla tras preparar todo, NO debe quedar ninguna lectura climática huérfana
-    ni consulta registrada."""
+    """Si Gemini falla tras las llamadas externas, la transacción se revierte
+    y no debe quedar ningún registro en lecturas_climaticas ni consultas_recomendaciones."""
     clima = _clima_falso()
 
     def _clima_ok(*args, **kwargs):
@@ -89,7 +88,6 @@ def test_doble_commit_huerfano_tras_fallo_gemini(client, db, headers, parcela, h
     lecturas = db.query(LecturaClimatica).all()
     consultas = db.query(ConsultaRecomendacion).all()
 
-    # Rollback total: sin registros huérfanos
     assert len(lecturas) == 0
     assert len(consultas) == 0
 
