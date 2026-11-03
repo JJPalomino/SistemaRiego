@@ -143,7 +143,7 @@ app/
     ├── telemetry/           # sensores, lecturas e ingesta idempotente
     ├── ai_advisor/          # clima, LLM, historial reproducible
     ├── reports/             # PDF generado bajo demanda
-    └── ml_models/           # (fase 4: entrenamiento e inferencia)
+    └── ml_models/           # reservado para el modelo de prediccion
 data/
 └── catalogo_hortalizas.json # 9 cultivos con umbrales y etapas
 scripts/

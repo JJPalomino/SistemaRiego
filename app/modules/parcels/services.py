@@ -192,8 +192,9 @@ def obtener_siembra_por_id(
 ) -> Siembra:
     """Busca una siembra por id sin exigir el id de la parcela.
 
-    Lo usa el asesor para resolver 'siembra_id' en la peticion. El filtro por
-    'usuario_id' mantiene el aislamiento entre productores.
+    Lo usa el modulo de recomendaciones para resolver 'siembra_id' en la
+    peticion. El filtro por 'usuario_id' mantiene el aislamiento entre
+    productores.
     """
     siembra = (
         db.query(Siembra)

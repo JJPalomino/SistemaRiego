@@ -1,4 +1,4 @@
-"""Pruebas del asesor de IA.
+"""Pruebas del modulo de recomendaciones.
 
 Se aislan las dos dependencias externas (Open-Meteo y Gemini) para que la
 suite sea determinista y no consuma cuota.

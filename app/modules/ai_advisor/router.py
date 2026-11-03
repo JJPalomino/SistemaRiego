@@ -16,7 +16,7 @@ from app.modules.ai_advisor.weather_client import ErrorClima
 from app.modules.parcels.services import ParcelaNoEncontrada, SiembraNoEncontrada
 from app.modules.users.models import Usuario
 
-router = APIRouter(prefix="/api/v1/ai", tags=["Asesor IA"])
+router = APIRouter(prefix="/api/v1/ai", tags=["Recomendaciones"])
 
 
 # ---------------------------------------------------------------------------
