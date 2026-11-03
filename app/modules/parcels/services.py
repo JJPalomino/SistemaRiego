@@ -46,7 +46,7 @@ def listar_parcelas(db: Session, usuario_id: int) -> List[Parcela]:
 def obtener_parcela(db: Session, usuario_id: int, parcela_id: int) -> Parcela:
     """Busca una parcela del usuario.
 
-    Se filtra por `usuario_id` para que una parcela ajena responda 404 y no
+    Se filtra por 'usuario_id' para que una parcela ajena responda 404 y no
     403: no conviene revelar que el id existe.
     """
     parcela = (
@@ -64,7 +64,7 @@ def crear_parcela(db: Session, usuario_id: int, datos: ParcelaCreate) -> Parcela
 
     Open-Meteo expone la elevacion del punto exacto. Se consulta en el alta
     porque el balance hidrico y la ET0 dependen de la altitud. Si el servicio
-    falla, la parcela se crea igual con `altitud_msnm = None`: no se bloquea el
+    falla, la parcela se crea igual con 'altitud_msnm = None': no se bloquea el
     registro por una dependencia externa.
     """
     valores = datos.model_dump()
@@ -192,8 +192,8 @@ def obtener_siembra_por_id(
 ) -> Siembra:
     """Busca una siembra por id sin exigir el id de la parcela.
 
-    Lo usa el asesor para resolver `siembra_id` en la peticion. El filtro por
-    `usuario_id` mantiene el aislamiento entre productores.
+    Lo usa el asesor para resolver 'siembra_id' en la peticion. El filtro por
+    'usuario_id' mantiene el aislamiento entre productores.
     """
     siembra = (
         db.query(Siembra)

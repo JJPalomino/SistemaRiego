@@ -15,13 +15,11 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# El frontend de las microparcelas se sirve desde otro origen durante el
-# desarrollo. En produccion hay que restringir la lista a los dominios reales.
+# En produccion, CORS_ORIGINS debe listar los dominios reales.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
-    # Con credenciales, el navegador no acepta el comodin "*": se refleja el
-    # origen de la peticion.
+    # Con credenciales el comodin "*" no es valido: se refleja el origen.
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

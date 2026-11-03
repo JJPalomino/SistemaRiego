@@ -105,9 +105,9 @@ def _validar_rango(tipo: TipoSensor, valor: float) -> None:
 
 
 def _insert_con_ignorar_duplicados(db: Session):
-    """Devuelve el constructor `insert` del dialecto activo.
+    """Devuelve el constructor 'insert' del dialecto activo.
 
-    `on_conflict_do_nothing` existe tanto en PostgreSQL como en SQLite, que es
+    'on_conflict_do_nothing' existe tanto en PostgreSQL como en SQLite, que es
     el motor que usan las pruebas.
     """
     nombre = db.get_bind().dialect.name

@@ -11,11 +11,8 @@ from app.core.config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Hash de un valor que nunca sera una contrasena real. Se verifica contra el
-# cuando el correo no existe, de modo que el tiempo de respuesta del login sea
-# equivalente tanto si el usuario existe como si no (evita enumerar correos por
-# diferencia de tiempos). Es un bcrypt valido y fijo: no se genera en cada
-# import porque bcrypt con coste 12 tarda ~250 ms.
+# Hash fijo contra el que se compara cuando el correo no existe: iguala el
+# tiempo de respuesta y evita enumerar usuarios.
 DUMMY_HASH = "$2b$12$YYFPFQJQxI9XS809W/SVY.w82hkomdXV4kjNNVEwqP3Vz./6OvwfO"
 
 
@@ -29,7 +26,7 @@ def verificar_password(password: str, hash: str) -> bool:
 
 def crear_token(data: dict) -> str:
     payload = data.copy()
-    # `datetime.utcnow()` esta deprecado desde Python 3.12 y emite aviso en 3.13.
+    # 'datetime.utcnow()' esta deprecado desde Python 3.12 y emite aviso en 3.13.
     ahora = datetime.now(timezone.utc)
     payload["exp"] = ahora + timedelta(hours=settings.ACCESS_TOKEN_EXPIRE_HOURS)
     payload["iat"] = ahora
@@ -39,7 +36,7 @@ def crear_token(data: dict) -> str:
 def registrar_usuario(db: Session, datos: UsuarioCreate) -> Usuario:
     existente = db.query(Usuario).filter(Usuario.email == datos.email).first()
     if existente:
-        raise ValueError("El correo ya esta registrado")
+        raise ValueError("El correo ya está registrado")
     usuario = Usuario(
         nombre=datos.nombre,
         email=datos.email,

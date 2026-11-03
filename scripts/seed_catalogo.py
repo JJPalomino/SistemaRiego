@@ -52,7 +52,7 @@ def sembrar(db: Session, catalogo: list[HortalizaCreate]) -> tuple[int, int]:
         else:
             for campo, valor in campos.items():
                 setattr(existente, campo, valor)
-            # `cascade="all, delete-orphan"` elimina las etapas anteriores.
+            # 'cascade="all, delete-orphan"' elimina las etapas anteriores.
             existente.etapas = etapas
             actualizadas += 1
 

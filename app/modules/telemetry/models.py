@@ -27,7 +27,7 @@ class TipoSensor(str, enum.Enum):
     viento = "viento"
 
 
-# Unidad canonica de cada tipo de sensor. Se guarda en `Sensor.unidad` para
+# Unidad canonica de cada tipo de sensor. Se guarda en 'Sensor.unidad' para
 # dejar explicito con que magnitud se esta alimentando el modelo.
 UNIDAD_POR_TIPO: dict[TipoSensor, str] = {
     TipoSensor.humedad_suelo: "%",
@@ -43,7 +43,7 @@ UNIDAD_POR_TIPO: dict[TipoSensor, str] = {
 class Sensor(Base):
     """Sensor fisico instalado en una parcela.
 
-    `profundidad_cm` solo aplica a los sensores enterrados (humedad y
+    'profundidad_cm' solo aplica a los sensores enterrados (humedad y
     temperatura de suelo). Se deja en la tabla, y no como columnas fijas, para
     soportar 1, 2 o 3 profundidades sin cambiar el esquema cuando lleguen los
     sensores reales.

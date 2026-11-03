@@ -118,7 +118,7 @@ def obtener_siembra_vigente(
     usuario: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Ciclo de cultivo vigente hoy, o `null` si la parcela esta en descanso."""
+    """Ciclo de cultivo vigente hoy, o 'null' si la parcela esta en descanso."""
     try:
         return services.obtener_siembra_vigente(db, usuario.id, parcela_id)
     except services.ParcelaNoEncontrada as e:

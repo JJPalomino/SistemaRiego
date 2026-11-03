@@ -75,7 +75,7 @@ class Siembra(Base):
 
     12 meses de historico con ciclos de 50-120 dias implican varios ciclos por
     parcela; por eso la siembra es una entidad propia y no un campo de
-    `Parcela`.
+    'Parcela'.
     """
 
     __tablename__ = "siembras"

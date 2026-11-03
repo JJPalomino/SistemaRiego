@@ -22,8 +22,8 @@
       "etapas": [
         {"nombre_etapa": "Establecimiento", "dia_inicio": 1, "dia_fin": 20, "temp_critica_etapa_c": 4.0, "riego_frecuencia_dias": 2, "notas_etapa": "Trasplante y arraigue; mantener humedad constante."},
         {"nombre_etapa": "Crecimiento vegetativo", "dia_inicio": 21, "dia_fin": 45, "temp_critica_etapa_c": 6.0, "riego_frecuencia_dias": 3, "notas_etapa": "Aumenta el consumo de agua con el area foliar."},
-        {"nombre_etapa": "Floracion y cuajado", "dia_inicio": 46, "dia_fin": 75, "temp_critica_etapa_c": 8.0, "riego_frecuencia_dias": 3, "notas_etapa": "Etapa critica: el deficit hidrico provoca caida de flor."},
-        {"nombre_etapa": "Fructificacion y cosecha", "dia_inicio": 76, "dia_fin": 120, "temp_critica_etapa_c": 8.0, "riego_frecuencia_dias": 4, "notas_etapa": "Evitar excesos para no agrietar el fruto."}
+        {"nombre_etapa": "Floración y cuajado", "dia_inicio": 46, "dia_fin": 75, "temp_critica_etapa_c": 8.0, "riego_frecuencia_dias": 3, "notas_etapa": "Etapa critica: el deficit hidrico provoca caida de flor."},
+        {"nombre_etapa": "Fructificación y cosecha", "dia_inicio": 76, "dia_fin": 120, "temp_critica_etapa_c": 8.0, "riego_frecuencia_dias": 4, "notas_etapa": "Evitar excesos para no agrietar el fruto."}
       ]
     },
     {
@@ -47,7 +47,7 @@
       "etapas": [
         {"nombre_etapa": "Establecimiento", "dia_inicio": 1, "dia_fin": 15, "temp_critica_etapa_c": 2.0, "riego_frecuencia_dias": 2, "notas_etapa": "Siembra o trasplante con riego ligero y frecuente."},
         {"nombre_etapa": "Crecimiento de hojas", "dia_inicio": 16, "dia_fin": 40, "temp_critica_etapa_c": 2.0, "riego_frecuencia_dias": 3, "notas_etapa": "Maxima demanda de nitrogeno y agua."},
-        {"nombre_etapa": "Formacion de cabeza", "dia_inicio": 41, "dia_fin": 65, "temp_critica_etapa_c": 2.0, "riego_frecuencia_dias": 3, "notas_etapa": "Riego uniforme para evitar cabezas flojas."}
+        {"nombre_etapa": "Formación de cabeza", "dia_inicio": 41, "dia_fin": 65, "temp_critica_etapa_c": 2.0, "riego_frecuencia_dias": 3, "notas_etapa": "Riego uniforme para evitar cabezas flojas."}
       ]
     },
     {
@@ -95,8 +95,8 @@
       "etapas": [
         {"nombre_etapa": "Emergencia", "dia_inicio": 1, "dia_fin": 15, "temp_critica_etapa_c": 4.0, "riego_frecuencia_dias": 2, "notas_etapa": "Siembra directa; mantener humedad sin encharcar."},
         {"nombre_etapa": "Crecimiento rastrero", "dia_inicio": 16, "dia_fin": 45, "temp_critica_etapa_c": 4.0, "riego_frecuencia_dias": 3, "notas_etapa": "Riego por surco preferente sobre el follaje."},
-        {"nombre_etapa": "Floracion", "dia_inicio": 46, "dia_fin": 65, "temp_critica_etapa_c": 6.0, "riego_frecuencia_dias": 3, "notas_etapa": "Etapa de mayor consumo hidrico."},
-        {"nombre_etapa": "Fructificacion", "dia_inicio": 66, "dia_fin": 100, "temp_critica_etapa_c": 6.0, "riego_frecuencia_dias": 4, "notas_etapa": "Reducir el riego al acercarse la cosecha."}
+        {"nombre_etapa": "Floración", "dia_inicio": 46, "dia_fin": 65, "temp_critica_etapa_c": 6.0, "riego_frecuencia_dias": 3, "notas_etapa": "Etapa de mayor consumo hidrico."},
+        {"nombre_etapa": "Fructificación", "dia_inicio": 66, "dia_fin": 100, "temp_critica_etapa_c": 6.0, "riego_frecuencia_dias": 4, "notas_etapa": "Reducir el riego al acercarse la cosecha."}
       ]
     },
     {
@@ -120,12 +120,12 @@
       "etapas": [
         {"nombre_etapa": "Emergencia", "dia_inicio": 1, "dia_fin": 25, "temp_critica_etapa_c": 0.0, "riego_frecuencia_dias": 5, "notas_etapa": "Riego de asiento y luego espaciar."},
         {"nombre_etapa": "Crecimiento", "dia_inicio": 26, "dia_fin": 90, "temp_critica_etapa_c": 0.0, "riego_frecuencia_dias": 6, "notas_etapa": "Riego moderado y constante."},
-        {"nombre_etapa": "Bulbificacion", "dia_inicio": 91, "dia_fin": 140, "temp_critica_etapa_c": 0.0, "riego_frecuencia_dias": 7, "notas_etapa": "Reducir el riego; el exceso deforma el bulbo."},
+        {"nombre_etapa": "Bulbificación", "dia_inicio": 91, "dia_fin": 140, "temp_critica_etapa_c": 0.0, "riego_frecuencia_dias": 7, "notas_etapa": "Reducir el riego; el exceso deforma el bulbo."},
         {"nombre_etapa": "Madurez", "dia_inicio": 141, "dia_fin": 180, "temp_critica_etapa_c": 0.0, "riego_frecuencia_dias": 10, "notas_etapa": "Suspender el riego 2-3 semanas antes de la cosecha."}
       ]
     },
     {
-      "nombre": "Rabano",
+      "nombre": "Rábano",
       "nombre_cientifico": "Raphanus sativus",
       "temp_min_c": 5.0,
       "temp_max_c": 25.0,
@@ -193,8 +193,8 @@
       "etapas": [
         {"nombre_etapa": "Establecimiento", "dia_inicio": 1, "dia_fin": 20, "temp_critica_etapa_c": 4.0, "riego_frecuencia_dias": 2, "notas_etapa": "Trasplante con riego ligero y frecuente."},
         {"nombre_etapa": "Vegetativo", "dia_inicio": 21, "dia_fin": 50, "temp_critica_etapa_c": 5.0, "riego_frecuencia_dias": 3, "notas_etapa": "Riego regular sin encharcar."},
-        {"nombre_etapa": "Floracion", "dia_inicio": 51, "dia_fin": 80, "temp_critica_etapa_c": 6.0, "riego_frecuencia_dias": 3, "notas_etapa": "Evitar excesos: provocan caida de flor."},
-        {"nombre_etapa": "Fructificacion", "dia_inicio": 81, "dia_fin": 130, "temp_critica_etapa_c": 6.0, "riego_frecuencia_dias": 4, "notas_etapa": "Riego moderado para concentrar el sabor."}
+        {"nombre_etapa": "Floración", "dia_inicio": 51, "dia_fin": 80, "temp_critica_etapa_c": 6.0, "riego_frecuencia_dias": 3, "notas_etapa": "Evitar excesos: provocan caida de flor."},
+        {"nombre_etapa": "Fructificación", "dia_inicio": 81, "dia_fin": 130, "temp_critica_etapa_c": 6.0, "riego_frecuencia_dias": 4, "notas_etapa": "Riego moderado para concentrar el sabor."}
       ]
     },
     {

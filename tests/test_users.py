@@ -35,7 +35,7 @@ def test_registro_correo_duplicado(client, usuario):
         },
     )
     assert r.status_code == 400
-    assert "ya esta registrado" in r.json()["detail"]
+    assert "ya está registrado" in r.json()["detail"]
 
 
 def test_registro_password_corta(client):

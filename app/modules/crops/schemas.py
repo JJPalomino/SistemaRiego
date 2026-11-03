@@ -2,9 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field, model_validator
 
-# Se importa el enum desde los modelos para tener una unica fuente de verdad.
-# Antes estaba duplicado en models.py y schemas.py, lo que permitia que ambos
-# se desincronizaran silenciosamente.
+# El enum vive en models.py para tener una sola fuente de verdad.
 from app.modules.crops.models import SensibilidadNivel  # noqa: F401  (reexportado)
 
 

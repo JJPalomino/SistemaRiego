@@ -44,12 +44,12 @@ def obtener_recomendacion(
     except ErrorClima as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="No se pudo obtener el pronostico climatico",
+            detail="No se pudo obtener el pronóstico climático",
         )
     except ErrorLLM as e:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="No se pudo generar la recomendacion",
+            detail="No se pudo generar la recomendación",
         )
 
 

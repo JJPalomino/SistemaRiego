@@ -2,7 +2,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    # `class Config` esta deprecado en pydantic-settings v2.
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -13,32 +12,33 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     GEMINI_API_KEY: str
 
-    # Cuando es True el advisor de IA devuelve una respuesta de demostracion
-    # sin consumir cuota de Gemini (util para desarrollo y para pruebas de
-    # integracion que no deben depender de un servicio de terceros).
+    # En True devuelve una recomendacion de demostracion sin consumir Gemini.
     DEMO_MODE: bool = False
 
-    # Modelo de Gemini a utilizar.
-    # NOTA: Verifica siempre los modelos vigentes con:
-    #   GET https://generativelanguage.googleapis.com/v1beta/models
-    GEMINI_MODEL: str = "gemini-3.8-flash"
+    # Modelo principal de Gemini.
+    GEMINI_MODEL: str = "gemini-3.5-flash-lite"
     GEMINI_API_BASE: str = "https://generativelanguage.googleapis.com/v1beta/models"
+
+    # Respaldos en orden; se usan si el principal responde 429 o 503.
+    GEMINI_MODELOS_RESPALDO: list[str] = [
+        "gemini-3.1-flash-lite",
+        "gemini-3.8-flash",
+    ]
 
     # Vigencia del token JWT (en horas).
     ACCESS_TOKEN_EXPIRE_HOURS: int = 24
 
-    # Tope de tokens de salida para la generacion. El prompt solicita 2 textos
-    # largos mas un arreglo de alertas: con 1024 la respuesta llegaba truncada y
-    # `json.loads` fallaba con "Unterminated string".
+    # Tope de tokens de salida: el prompt pide dos textos largos y alertas.
     GEMINI_MAX_OUTPUT_TOKENS: int = 4096
 
-    # Numero de reintentos ante fallos transitorios de la API (429/503).
+    # Reintentos ante fallos transitorios de la API (429/503).
     GEMINI_MAX_RETRIES: int = 3
 
-    # Tiempo maximo de espera por respuesta de Gemini (segundos). Los modelos
-    # con razonamiento pueden tardar mas de un minuto incluso en respuestas
-    # cortas, por lo que 60 s provocaba 502 intermitentes.
-    GEMINI_TIMEOUT_S: float = 180.0
+    # Espera maxima por una respuesta de Gemini (segundos).
+    GEMINI_TIMEOUT_S: float = 60.0
+
+    # Tope para toda la cadena de reintentos; la app espera hasta 300 s.
+    GEMINI_TOTAL_TIMEOUT_S: float = 240.0
 
     # Orígenes permitidos por CORS. En produccion debe ser una lista explicita
     # de dominios; "*" se permite solo mientras se desarrolla.
@@ -46,7 +46,23 @@ class Settings(BaseSettings):
 
     @property
     def gemini_generate_url(self) -> str:
-        return f"{self.GEMINI_API_BASE}/{self.GEMINI_MODEL}:generateContent"
+        return self.gemini_url_para(self.GEMINI_MODEL)
+
+    def gemini_url_para(self, modelo: str) -> str:
+        """URL de generacion para un modelo concreto (uno de la cadena)."""
+        return f"{self.GEMINI_API_BASE}/{modelo}:generateContent"
+
+    @property
+    def gemini_modelos(self) -> list[str]:
+        """Modelo principal seguido de los de respaldo, sin duplicados."""
+        vistos: set[str] = set()
+        cadena: list[str] = []
+        for modelo in [self.GEMINI_MODEL, *self.GEMINI_MODELOS_RESPALDO]:
+            limpio = (modelo or "").strip()
+            if limpio and limpio not in vistos:
+                vistos.add(limpio)
+                cadena.append(limpio)
+        return cadena
 
 
 settings = Settings()

@@ -9,7 +9,7 @@ NOMBRES_ESPERADOS = {
     "Cilantro",
     "Calabaza",
     "Ajo",
-    "Rabano",
+    "Rábano",
     "Acelga",
     "Chile",
     "Zanahoria",

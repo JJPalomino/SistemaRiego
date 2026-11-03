@@ -58,7 +58,7 @@ class SiembraBase(BaseModel):
             )
         if self.fecha_siembra > date.today():
             raise ValueError(
-                "fecha_siembra no puede estar en el futuro: la etapa fenologica "
+                "fecha_siembra no puede estar en el futuro: la etapa fenológica "
                 "se calcula a partir de los dias transcurridos"
             )
         return self

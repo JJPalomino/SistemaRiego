@@ -216,18 +216,18 @@ def test_prompt_incluye_unidades_corregidas(monkeypatch):
     capturado = _FakeClient.capturado
     prompt = capturado["payload"]["contents"][0]["parts"][0]["text"]
 
-    # Correccion 1: humedad del suelo en porcentaje.
+    # La humedad del suelo viaja en porcentaje.
     assert "Humedad del suelo: 6.0%" in prompt
     assert "0.06%" not in prompt
 
-    # Correccion 2: radiacion solar en W/m2.
+    # La radiacion solar viaja en W/m2.
     assert "Radiacion solar media: 234.85 W/m2" in prompt
 
-    # Correccion 3: modelo vigente, no el retirado.
+    # La URL usa el modelo vigente configurado.
     assert "gemini-1.5-flash" not in capturado["url"]
     assert capturado["url"].endswith(f"{llm_client.settings.GEMINI_MODEL}:generateContent")
 
-    # Correccion 4: presupuesto de tokens suficiente y salida JSON forzada.
+    # Presupuesto de tokens suficiente y salida JSON forzada.
     config = capturado["payload"]["generationConfig"]
     assert config["maxOutputTokens"] >= 4096
     assert config.get("response_mime_type") == "application/json" or config.get("responseMimeType") == "application/json"
@@ -255,6 +255,61 @@ def test_respuesta_truncada_lanza_error(monkeypatch):
         llm_client.generar_recomendacion(
             HORTALIZA_COMPLETA, CLIMA_FALSO, "Crecimiento", 25
         )
+
+
+def test_429_usa_el_siguiente_modelo_de_la_cadena(monkeypatch):
+    """Un 429 (cuota diaria agotada) no debe dejar sin servicio.
+
+    Cada modelo gratuito tiene su propia cuota, asi que al agotarse la del
+    principal se pasa al respaldo sin reintentar contra el mismo.
+    """
+    import httpx as httpx_real
+
+    llamados = []
+
+    class _Respuesta429:
+        status_code = 429
+        request = httpx_real.Request(
+            "POST", "https://generativelanguage.googleapis.com/v1beta/models/x"
+        )
+
+        def raise_for_status(self):
+            raise httpx_real.HTTPStatusError(
+                "429", request=self.request, response=self
+            )
+
+        def json(self):
+            return {}
+
+    class _ClienteCadena:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def post(self, url, **kwargs):
+            llamados.append(url)
+            if len(llamados) == 1:
+                return _Respuesta429()
+            return _FakeRespuesta()
+
+    monkeypatch.setattr(llm_client.settings, "DEMO_MODE", False)
+    monkeypatch.setattr(llm_client.httpx, "Client", _ClienteCadena)
+
+    resultado = llm_client.generar_recomendacion(
+        HORTALIZA_COMPLETA, CLIMA_FALSO, "Crecimiento", 25
+    )
+
+    modelos = llm_client.settings.gemini_modelos
+    assert len(modelos) > 1, "la prueba necesita al menos un modelo de respaldo"
+    assert len(llamados) == 2, llamados
+    assert modelos[1] in llamados[1]
+    assert resultado.modelo_llm == modelos[1]
+    assert resultado["nivel_urgencia_max"] == "precaucion"
 
 
 def test_extraer_json_con_markdown():

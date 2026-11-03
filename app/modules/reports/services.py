@@ -1,10 +1,3 @@
-"""Armado del PDF de una recomendacion.
-
-El PDF se construye en memoria con ReportLab y se devuelve como descarga. No se
-guarda en disco ni en la base: solo se registran metadatos en
-`reportes_generados`, tal como pide el documento del proyecto.
-"""
-
 from datetime import datetime
 from io import BytesIO
 from typing import Optional
@@ -74,7 +67,7 @@ def _hex(color) -> str:
 def _tabla_datos(filas: list[tuple[str, str]], estilos) -> Table:
     tabla = Table(
         [[Paragraph(f"<b>{_texto(k)}</b>", estilos["celda"]),
-          Paragraph(_texto(v), estilos["celda"])] for k, v in filas],
+        Paragraph(_texto(v), estilos["celda"])] for k, v in filas],
         colWidths=[4.2 * cm, 11.3 * cm],
     )
     tabla.setStyle(
@@ -278,9 +271,9 @@ def generar_pdf(
     historia.append(
         Paragraph(
             "Documento generado automaticamente por el sistema de "
-            "recomendaciones. La recomendacion combina el modelo de prediccion, "
-            "el pronostico de Open-Meteo y la redaccion del asesor; debe "
-            "validarse en campo antes de aplicarse.",
+            "recomendaciones. La recomendacion combina el catalogo agronomico, "
+            "el pronostico de Open-Meteo y la redaccion asistida por "
+            "inteligencia artificial; debe validarse en campo antes de aplicarse.",
             estilos["nota"],
         )
     )

@@ -40,9 +40,8 @@ class EtapaHortaliza(Base):
     __tablename__ = "etapas_hortaliza"
 
     id:                    Mapped[int]   = mapped_column(primary_key=True, index=True)
-    # `ondelete="CASCADE"` debe coincidir con la migracion d9072270ce8e; de lo
-    # contrario `alembic check` reporta divergencia entre el modelo y el
-    # esquema real de la base de datos.
+    # Debe coincidir con la migracion d9072270ce8e para que 'alembic check'
+    # no reporte divergencias.
     hortaliza_id:          Mapped[int]   = mapped_column(
         ForeignKey("hortalizas.id", ondelete="CASCADE"), nullable=False
     )

@@ -140,6 +140,7 @@ def _guardar_consulta(
     prompt: str,
     recomendacion: dict,
     nivel: str,
+    modelo: Optional[str] = None,
 ) -> ConsultaRecomendacion:
     """Guarda la fotografia exacta de la recomendacion.
 
@@ -163,7 +164,7 @@ def _guardar_consulta(
             recomendacion.get("recomendacion_general", "")
         ).strip(),
         nivel_urgencia_max=nivel,
-        modelo_llm=None if settings.DEMO_MODE else settings.GEMINI_MODEL,
+        modelo_llm=None if settings.DEMO_MODE else (modelo or settings.GEMINI_MODEL),
         demo_mode=settings.DEMO_MODE,
     )
     db.add(consulta)
@@ -220,6 +221,7 @@ def _guardar_consulta_tx(
     prompt: str,
     recomendacion: dict,
     nivel: str,
+    modelo: Optional[str] = None,
 ) -> ConsultaRecomendacion:
     """Versión para transacción unificada (sin commit/refresh)."""
     consulta = ConsultaRecomendacion(
@@ -239,7 +241,7 @@ def _guardar_consulta_tx(
             recomendacion.get("recomendacion_general", "")
         ).strip(),
         nivel_urgencia_max=nivel,
-        modelo_llm=None if settings.DEMO_MODE else settings.GEMINI_MODEL,
+        modelo_llm=None if settings.DEMO_MODE else (modelo or settings.GEMINI_MODEL),
         demo_mode=settings.DEMO_MODE,
     )
     db.add(consulta)
@@ -317,6 +319,8 @@ def generar_recomendacion(
     recomendacion = llm_client.generar_recomendacion(
         hortaliza_prompt, clima_datos, nombre_etapa, dias
     )
+    # El historial guarda el modelo que respondio, no solo el principal.
+    modelo_usado = getattr(recomendacion, "modelo_llm", None) or settings.GEMINI_MODEL
 
     alertas = _sanear_alertas(recomendacion.get("alertas"))
     nivel = _normalizar_urgencia(recomendacion.get("nivel_urgencia_max"))
@@ -350,6 +354,7 @@ def generar_recomendacion(
                     prompt=prompt,
                     recomendacion=recomendacion_saneada,
                     nivel=nivel,
+                    modelo=modelo_usado,
                 )
         if consulta is not None:
             db_tx.refresh(consulta)
@@ -375,7 +380,7 @@ def generar_recomendacion(
         ).strip(),
         alertas=alertas,
         nivel_urgencia_max=nivel,
-        modelo_llm=None if settings.DEMO_MODE else settings.GEMINI_MODEL,
+        modelo_llm=None if settings.DEMO_MODE else modelo_usado,
         demo_mode=settings.DEMO_MODE,
         id_consulta=consulta.id if consulta is not None else None,
         generado_en=datetime.now(timezone.utc),

@@ -9,7 +9,7 @@ from app.core.config import settings
 from app.database import SessionLocal
 from app.modules.users.models import Usuario
 
-# `auto_error=False` para poder devolver un 401 con un mensaje propio en vez
+# 'auto_error=False' para poder devolver un 401 con un mensaje propio en vez
 # del 403 por defecto de FastAPI cuando falta la cabecera Authorization.
 bearer_scheme = HTTPBearer(auto_error=False)
 

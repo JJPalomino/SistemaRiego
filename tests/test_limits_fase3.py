@@ -1,10 +1,10 @@
-"""Casos de prueba críticos para estresar los límites lógicos de la Fase 3.
+"""Pruebas de los limites logicos del flujo de recomendaciones.
 
-Estos tests se enfocan en:
-1. Doble commit huérfano tras fallo de Gemini
+Cubren:
+1. Rollback completo tras fallo de Gemini
 2. Peticiones sin parcela/siembra (historial nulo)
 3. Concurrencia lenta con trabajo bloqueante delegado al threadpool
-4. Saneo lógico de alertas y validación con Pydantic
+4. Saneo de alertas y validacion con Pydantic
 """
 
 import asyncio

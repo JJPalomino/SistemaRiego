@@ -204,3 +204,57 @@ def test_pdf_aislado_entre_usuarios(
         f"/api/v1/reportes/siembras/{siembra['id']}.pdf", headers=headers_otro
     )
     assert r.status_code == 404
+
+
+def test_pdf_no_bloquea_el_event_loop(
+    client, headers, parcela, culture, sin_servicios_externos, monkeypatch
+):
+    """El armado del PDF corre en el threadpool: /health sigue respondiendo.
+
+    Se sustituye 'generar_pdf' por una version lenta para que la prueba no
+    dependa de lo que tarde ReportLab en la maquina.
+    """
+    import asyncio
+    import time
+
+    from httpx import ASGITransport, AsyncClient
+
+    from app.modules.reports import router as reports_router
+
+    siembra = _crear_siembra(client, headers, parcela, culture)
+    _pedir_recomendacion(client, headers, siembra["id"])
+
+    def _pdf_lento(*args, **kwargs):
+        time.sleep(2)
+        return b"%PDF-1.4\n% reporte de prueba\n"
+
+    monkeypatch.setattr(reports_router, "generar_pdf", _pdf_lento)
+
+    async def ejecutar():
+        transporte = ASGITransport(app=client.app)
+        async with AsyncClient(
+            transport=transporte, base_url="http://test"
+        ) as cliente:
+            tarea = asyncio.create_task(
+                cliente.get(
+                    f"/api/v1/reportes/siembras/{siembra['id']}.pdf",
+                    headers=headers,
+                )
+            )
+            await asyncio.sleep(0.4)
+
+            inicio = time.perf_counter()
+            salud = await cliente.get("/health")
+            transcurrido = time.perf_counter() - inicio
+
+            assert salud.status_code == 200
+            assert transcurrido < 1.0, (
+                f"/health tardo {transcurrido:.2f}s mientras se generaba el PDF"
+            )
+
+            respuesta = await tarea
+            assert respuesta.status_code == 200
+            assert respuesta.content.startswith(b"%PDF")
+
+    asyncio.run(ejecutar())
+

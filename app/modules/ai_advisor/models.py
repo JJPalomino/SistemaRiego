@@ -1,15 +1,3 @@
-"""Historial reproducible de clima y recomendaciones.
-
-El documento del proyecto exige dos cosas que no se pueden reconstruir despues:
-guardar la respuesta completa de Open-Meteo (JSON de respaldo) ademas de los
-campos normalizados, y guardar cada recomendacion con el prompt exacto, la
-respuesta integra del modelo y una fotografia del estado del cultivo (etapa y
-dias transcurridos).
-
-`reportes_generados` solo guarda metadatos: el PDF no se almacena, se genera
-en el momento de la descarga.
-"""
-
 from datetime import datetime
 from typing import Optional
 
@@ -32,7 +20,7 @@ from app.database import Base
 class LecturaClimatica(Base):
     """Una consulta a Open-Meteo para una parcela.
 
-    `datos_json` conserva el payload completo tal como lo devolvio la API. Las
+    'datos_json' conserva el payload completo tal como lo devolvio la API. Las
     columnas normalizadas existen para poder consultar y graficar sin abrir el
     JSON, no para reemplazarlo.
     """
@@ -77,7 +65,7 @@ class LecturaClimatica(Base):
 class ConsultaRecomendacion(Base):
     """Fotografia completa de una recomendacion generada.
 
-    Las claves foraneas usan `SET NULL` a proposito: si el productor borra una
+    Las claves foraneas usan 'SET NULL' a proposito: si el productor borra una
     siembra o una parcela, el historial no debe desaparecer. Por eso tambien se
     guardan columnas de texto con el nombre del cultivo y la etapa calculada.
     """

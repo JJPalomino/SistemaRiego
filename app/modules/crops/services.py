@@ -7,7 +7,7 @@ from app.modules.crops.schemas import HortalizaCreate, HortalizaUpdate
 
 
 class HortalizaNoEncontrada(Exception):
-    """La culture solicitada no existe."""
+    """El cultivo solicitado no existe."""
 
 
 class HortalizaDuplicada(Exception):
@@ -25,15 +25,15 @@ def listar_hortalizas(db: Session) -> List[Hortaliza]:
 def obtener_hortaliza(db: Session, id_hortaliza: int) -> Hortaliza:
     result = db.query(Hortaliza).filter(Hortaliza.id == id_hortaliza).first()
     if result is None:
-        raise HortalizaNoEncontrada(f"No existe la culture con id {id_hortaliza}")
+        raise HortalizaNoEncontrada(f"No existe el cultivo con id {id_hortaliza}")
     return result
 
 
 def _reemplazar_etapas(db: Session, item: Hortaliza, etapas: list) -> None:
-    """Sustituye el conjunto de etapas de una culture.
+    """Sustituye el conjunto de etapas de un cultivo.
 
     Se borran y recrean porque el PUT es de reemplazo completo; la relacion
-    tiene `cascade="all, delete-orphan"` asi que SQLAlchemy marca las etapas
+    tiene 'cascade="all, delete-orphan"' asi que SQLAlchemy marca las etapas
     viejas para borrado automaticamente.
     """
     for etapa in list(item.etapas):
@@ -50,7 +50,7 @@ def crear_hortaliza(db: Session, datos: HortalizaCreate) -> Hortaliza:
     )
     if existente:
         raise HortalizaDuplicada(
-            f"Ya existe una culture con el nombre '{datos.nombre}'"
+            f"Ya existe un cultivo con el nombre '{datos.nombre}'"
         )
 
     item = Hortaliza(**datos.model_dump(exclude={"etapas"}))
@@ -76,7 +76,7 @@ def actualizar_hortaliza(
     )
     if duplicada:
         raise HortalizaDuplicada(
-            f"Ya existe otra culture con el nombre '{datos.nombre}'"
+            f"Ya existe otro cultivo con el nombre '{datos.nombre}'"
         )
 
     for campo, valor in datos.model_dump(exclude={"etapas"}).items():
@@ -92,7 +92,7 @@ def actualizar_hortaliza(
 def eliminar_hortaliza(db: Session, id_hortaliza: int) -> None:
     item = obtener_hortaliza(db, id_hortaliza)
 
-    # La FK de `siembras.hortaliza_id` es RESTRICT: borrar un cultivo con
+    # La FK de 'siembras.hortaliza_id' es RESTRICT: borrar un cultivo con
     # historico dejaria siembras huerfanas. Se comprueba antes de intentarlo
     # para responder 409 en lugar de un error de integridad 500.
     from app.modules.parcels.models import Siembra
@@ -106,7 +106,7 @@ def eliminar_hortaliza(db: Session, id_hortaliza: int) -> None:
             "registrada(s)"
         )
 
-    # Las etapas se van por `cascade="all, delete-orphan"` en la relacion y
+    # Las etapas se van por 'cascade="all, delete-orphan"' en la relacion y
     # en cascada a nivel de base de datos (ON DELETE CASCADE, ver migracion).
     db.delete(item)
     db.commit()

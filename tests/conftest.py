@@ -1,8 +1,8 @@
 """Configuracion compartida de la suite de pruebas.
 
 Las pruebas usan SQLite en memoria para no depender del PostgreSQL de
-desarrollo. Los modelos son portables: `Numeric`, `Enum` (como VARCHAR con
-CHECK) y `DateTime(timezone=True)` funcionan igual en ambos motores.
+desarrollo. Los modelos son portables: 'Numeric', 'Enum' (como VARCHAR con
+CHECK) y 'DateTime(timezone=True)' funcionan igual en ambos motores.
 """
 
 import os
@@ -13,7 +13,7 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-# Las variables de entorno deben existir antes de importar `app.core.config`.
+# Las variables de entorno deben existir antes de importar 'app.core.config'.
 os.environ.setdefault("DATABASE_URL", "sqlite://")
 os.environ.setdefault("SECRET_KEY", "clave-de-pruebas-no-usar-en-produccion")
 os.environ.setdefault("GEMINI_API_KEY", "dummy-para-pruebas")

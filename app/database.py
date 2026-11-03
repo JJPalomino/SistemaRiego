@@ -4,8 +4,8 @@ from app.core.config import settings
 
 engine = create_engine(
     settings.DATABASE_URL,
-    echo=False,        # Cambia a True si quieres ver las queries en consola
-    pool_pre_ping=True # Verifica la conexión antes de usarla
+    echo=False,
+    pool_pre_ping=True,
 )
 
 SessionLocal = sessionmaker(

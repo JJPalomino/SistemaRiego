@@ -39,5 +39,5 @@ def login(datos: LoginRequest, db: Session = Depends(get_db)):
 def mi_perfil(
     usuario: Usuario = Depends(get_current_user),
 ):
-    """Devuelve el usuario autenticado. Requiere `Authorization: Bearer <token>`."""
+    """Devuelve el usuario autenticado. Requiere 'Authorization: Bearer <token>'."""
     return usuario
